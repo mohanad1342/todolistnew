@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>مهامي اليومية</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="icon.png" type="image/png">
+    <style>
+        /* إضافة هذه القواعد لجعل التطبيق يشبه التطبيق الحقيقي */
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .app-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+        
+        /* تصميم شريط العنوان مثل تطبيق الهاتف */
+        .app-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative;
+            z-index: 10;
+        }
+        
+        .app-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f5f7fa;
+        }
+        
+        /* تصميم للهواتف */
+        @media (max-width: 480px) {
+            .app-title {
+                font-size: 1.2rem;
+            }
+            
+            .content-area {
+                padding: 15px;
+            }
+        }
+        
+        /* باقي التصميمات تبقى كما هي مع تعديلات طفيفة */
+        * {
+            box-sizing: border-box;
+        }
+        
+        .container {
+            max-width: 100%;
+            margin: 0;
+        }
+        
+        .description {
+            color: rgba(255,255,255,0.9);
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        
+        .input-section {
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: box-shadow 0.3s ease;
+        }
+        
+        .input-section:hover {
+            box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        #taskInput {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e0e6ff;
+            border-radius: 10px;
+            font-size: 1rem;
+            background: #f8faff;
+            transition: border-color 0.3s ease;
+        }
+        
+        #taskInput:focus {
+            border-color: #667eea;
+            outline: none;
+        }
+        
+        #addBtn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 0 20px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            min-width: 80px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        #addBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(102, 126, 234, 0.3);
+        }
+        
+        #addBtn:active {
+            transform: translateY(0);
+        }
+        
+        .tasks-section {
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: box-shadow 0.3s ease;
+        }
+        
+        .tasks-section:hover {
+            box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+        }
+        
+        .section-title {
+            font-size: 1.2rem;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f1f1f1;
+        }
+        
+        #taskList {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            background: #f8faff;
+            border: 1px solid #e0e6ff;
+            transition: all 0.3s ease;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .task-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        .task-item.removing {
+            animation: slideOut 0.3s ease forwards;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slideOut {
+            to { opacity: 0; transform: translateX(-100%); }
+        }
+        
+        .task-checkbox {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 2px solid #888;
+            margin-left: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            flex-shrink: 0;
+            transition: all 0.3s ease;
+        }
+        
+        .task-checkbox.checked {
+            background: #2ecc71;
+            border-color: #27ae60;
+            color: white;
+            animation: checkPulse 0.3s ease;
+        }
+        
+        @keyframes checkPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .task-text {
+            flex: 1;
+            font-size: 1rem;
+            padding: 0 10px;
+            transition: color 0.3s ease;
+        }
+        
+        .task-text.completed {
+            text-decoration: line-through;
+            color: #95a5a6;
+        }
+        
+        .delete-btn {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+        
+        .delete-btn:hover {
+            background: #ff5252;
+            transform: scale(1.05);
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            margin-top: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            transition: box-shadow 0.3s ease;
+        }
+        
+        .stats:hover {
+            box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+        }
+        
+        .stat-item {
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-item:hover {
+            transform: scale(1.05);
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+            display: block;
+            transition: color 0.3s ease;
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+        }
+        
+        #emptyState {
+            text-align: center;
+            padding: 40px 20px;
+            color: #95a5a6;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        /* إخفاء شريط التمرير في بعض المتصفحات */
+        .content-area::-webkit-scrollbar {
+            width: 5px;
+        }
+        
+        .content-area::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        .content-area::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <h1 class="app-title">
+                <i class="fas fa-tasks"></i>
+                مهامي اليومية
+            </h1>
+            <p class="description">تطبيق إدارة المهام الشخصية</p>
+        </header>
+        
+        <main class="content-area">
+            <div class="input-section">
+                <div class="input-group">
+                    <input type="text" id="taskInput" placeholder="أكتب مهمة جديدة...">
+                    <button id="addBtn">إضافة</button>
+                </div>
+            </div>
+            
+            <div class="tasks-section">
+                <h2 class="section-title">مهام اليوم</h2>
+                <div id="emptyState" style="text-align: center; padding: 40px 20px; color: #95a5a6; display: block;">
+                    <i class="fas fa-clipboard-list" style="font-size: 3rem; margin-bottom: 15px;"></i>
+                    <p>لا توجد مهام، ابدأ بإضافة مهمة جديدة</p>
+                </div>
+                <ul id="taskList"></ul>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-value" id="totalTasks">0</span>
+                    <span class="stat-label">إجمالي</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="completedTasks">0</span>
+                    <span class="stat-label">مكتملة</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="pendingTasks">0</span>
+                    <span class="stat-label">متبقية</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- ملف manifest.json للـ PWA -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+    </script>
+
+    <script>
+        // الحصول على العناصر من DOM
+        const taskInput = document.getElementById('taskInput');
+        const addBtn = document.getElementById('addBtn');
+        const taskList = document.getElementById('taskList');
+        const emptyState = document.getElementById('emptyState');
+        const totalTasksEl = document.getElementById('totalTasks');
+        const completedTasksEl = document.getElementById('completedTasks');
+        const pendingTasksEl = document.getElementById('pendingTasks');
+        
+        // تحميل المهام من التخزين المحلي
+        let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+        
+        // تحديث الإحصائيات
+        function updateStats() {
+            const totalTasks = tasks.length;
+            const completedTasks = tasks.filter(task => task.completed).length;
+            const pendingTasks = totalTasks - completedTasks;
+            
+            totalTasksEl.textContent = totalTasks;
+            completedTasksEl.textContent = completedTasks;
+            pendingTasksEl.textContent = pendingTasks;
+            
+            // إظهار أو إخفاء حالة القائمة الفارغة مع انيميشن
+            if (totalTasks === 0) {
+                emptyState.style.display = 'block';
+                emptyState.style.animation = 'fadeIn 0.5s ease';
+            } else {
+                emptyState.style.display = 'none';
+            }
+        }
+        
+        // حفظ المهام
+        function saveTasks() {
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            updateStats();
+        }
+        
+        // إنشاء مهمة جديدة
+        function createTaskElement(task) {
+            const li = document.createElement('li');
+            li.className = 'task-item';
+            li.dataset.id = task.id;
+            
+            const checkbox = document.createElement('div');
+            checkbox.className = `task-checkbox ${task.completed ? 'checked' : ''}`;
+            checkbox.innerHTML = task.completed ? '<i class="fas fa-check"></i>' : '';
+            
+            const taskText = document.createElement('span');
+            taskText.className = `task-text ${task.completed ? 'completed' : ''}`;
+            taskText.textContent = task.text;
+            
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+            
+            // أحداث النقر
+            checkbox.addEventListener('click', () => {
+                task.completed = !task.completed;
+                checkbox.classList.toggle('checked');
+                checkbox.innerHTML = task.completed ? '<i class="fas fa-check"></i>' : '';
+                taskText.classList.toggle('completed');
+                saveTasks();
+            });
+            
+            deleteBtn.addEventListener('click', () => {
+                if (confirm('حذف هذه المهمة؟')) {
+                    li.classList.add('removing');
+                    setTimeout(() => {
+                        tasks = tasks.filter(t => t.id !== task.id);
+                        li.remove();
+                        saveTasks();
+                    }, 300); // انتظر انتهاء الانيميشن
+                }
+            });
+            
+            // إضافة العناصر
+            li.appendChild(checkbox);
+            li.appendChild(taskText);
+            li.appendChild(deleteBtn);
+            
+            return li;
+        }
+        
+        // عرض المهام
+        function renderTasks() {
+            taskList.innerHTML = '';
+            tasks.forEach(task => {
+                taskList.appendChild(createTaskElement(task));
+            });
+            updateStats();
+        }
+        
+        // إضافة مهمة جديدة
+        function addTask() {
+            const text = taskInput.value.trim();
+            if (text === '') return;
+            
+            const newTask = {
+                id: Date.now(),
+                text: text,
+                completed: false,
+                createdAt: new Date().toISOString()
+            };
+            
+            tasks.push(newTask);
+            taskList.appendChild(createTaskElement(newTask));
+            taskInput.value = '';
+            saveTasks();
+        }
+        
+        // أحداث المستخدم
+        addBtn.addEventListener('click', addTask);
+        taskInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addTask();
+        });
+        
+        // تحميل عند البدء
+        document.addEventListener('DOMContentLoaded', () => {
+            renderTasks();
+            // لا توجد مهام عينة الآن - يبدأ فارغاً
+        });
+    </script>
+</body>
+</html>
